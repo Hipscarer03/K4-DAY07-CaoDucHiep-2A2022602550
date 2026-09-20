@@ -1,0 +1,108 @@
+======================================================================
+BENCHMARK RETRIEVAL VỚI CHIẾN LƯỢC SEMANTIC CHUNKING
+======================================================================
+Đang kiểm tra 3 tài liệu mục tiêu:
+  + tiktok-buyer-return-refund.md: 739 ký tự, doc_id=tiktok-buyer-return-refund, audience=buyer
+  + tiktok-return-methods.md: 835 ký tự, doc_id=tiktok-return-methods, audience=seller
+  + tiktok-seller-return-refund.md: 1121 ký tự, doc_id=tiktok-seller-return-refund, audience=seller
+
+----------------------------------------------------------------------
+1. BẢNG SO SÁNH BASELINE (FixedSize vs Sentence vs Recursive vs Semantic)
+----------------------------------------------------------------------
+
+[Tài liệu: tiktok-buyer-return-refund.md]
+  - FixedSize (chunk_size=300): 3 chunks, avg len: 246.3
+  - Sentence (max=3 sentences): 2 chunks, avg len: 368.0
+  - Recursive (chunk_size=300): 4 chunks, avg len: 183.2
+  - SemanticChunker (theo mục #): 3 chunks, avg len: 245.0
+
+[Tài liệu: tiktok-return-methods.md]
+  - FixedSize (chunk_size=300): 3 chunks, avg len: 278.3
+  - Sentence (max=3 sentences): 2 chunks, avg len: 416.0
+  - Recursive (chunk_size=300): 3 chunks, avg len: 277.0
+  - SemanticChunker (theo mục #): 3 chunks, avg len: 277.0
+
+[Tài liệu: tiktok-seller-return-refund.md]
+  - FixedSize (chunk_size=300): 4 chunks, avg len: 280.2
+  - Sentence (max=3 sentences): 3 chunks, avg len: 372.0
+  - Recursive (chunk_size=300): 5 chunks, avg len: 222.6
+  - SemanticChunker (theo mục #): 4 chunks, avg len: 278.8
+
+----------------------------------------------------------------------
+2. TIẾN HÀNH SEMANTIC CHUNKING VÀ NẠP VÀO VECTOR STORE
+----------------------------------------------------------------------
+  + Tạo Chunk: tiktok-buyer-return-refund#chunk_0 | Section: # Thời hạn gửi yêu cầu | Độ dài: 307 chars
+  + Tạo Chunk: tiktok-buyer-return-refund#chunk_1 | Section: # Các trường hợp được yêu cầu | Độ dài: 260 chars
+  + Tạo Chunk: tiktok-buyer-return-refund#chunk_2 | Section: # Lưu ý xử lý | Độ dài: 168 chars
+  + Tạo Chunk: tiktok-return-methods#chunk_0 | Section: # Phương thức trả hàng | Độ dài: 294 chars
+  + Tạo Chunk: tiktok-return-methods#chunk_1 | Section: # Trách nhiệm của người bán | Độ dài: 277 chars
+  + Tạo Chunk: tiktok-return-methods#chunk_2 | Section: # Phí vận chuyển và đối soát tiền hoàn | Độ dài: 260 chars
+  + Tạo Chunk: tiktok-seller-return-refund#chunk_0 | Section: # Xem xét yêu cầu | Độ dài: 274 chars
+  + Tạo Chunk: tiktok-seller-return-refund#chunk_1 | Section: # Thời hạn gửi hàng trả | Độ dài: 273 chars
+  + Tạo Chunk: tiktok-seller-return-refund#chunk_2 | Section: # Kiểm tra hàng trả về | Độ dài: 361 chars
+  + Tạo Chunk: tiktok-seller-return-refund#chunk_3 | Section: # Khiếu nại | Độ dài: 207 chars
+
+Tổng số chunks trong store: 10
+
+----------------------------------------------------------------------
+3. ĐÁNH GIÁ 5 BENCHMARK QUERIES
+----------------------------------------------------------------------
+
+[Query #1] Người mua có bao nhiêu ngày để gửi yêu cầu trả hàng hoàn tiền sau khi nhận hàng?
+  - Gold Answer: Người mua có thể gửi yêu cầu trong vòng 15 ngày dương lịch sau khi trạng thái đơn hàng cập nhật thành 'Đã giao hàng'.
+  - Metadata filter: {'audience': 'buyer'}
+  - Đánh giá: CHÍNH XÁC (MATCH)
+  - Top-1 ID: tiktok-buyer-return-refund#chunk_1 (Score: 0.1130)
+  - Top-1 Section: # Các trường hợp được yêu cầu
+  - Top-1 Content: # Các trường hợp được yêu cầu
+
+Người mua có thể yêu cầu khi không nhận được sản phẩm; sản phẩm không tuân thủ hợp đồng mua bán; giao sai sản phẩm; thi...
+  - Agent Answer: [Agent Response]: Người bán phải theo dõi và xử lý các yêu cầu trả hàng trong tab liên quan. Nếu người bán không chấp nhận nhận lại hàng sau 3 lần giao hàng thất bại, đơn vị vận chuyển sẽ ngừng liên lạc và kiện hàng sẽ bị tiêu hủy sau 7 ngày kể từ lần giao đầu tiên.
+
+[Query #2] Người bán có bao nhiêu ngày để xem xét và phản hồi yêu cầu trả hàng hoàn tiền của khách?
+  - Gold Answer: Người bán phải xem xét và xử lý trong vòng 1 ngày (1 ngày làm việc/dương lịch) kể từ khi nhận yêu cầu, nếu không sẽ được tự động phê duyệt.
+  - Metadata filter: {'audience': 'seller'}
+  - Đánh giá: CHÍNH XÁC (MATCH)
+  - Top-1 ID: tiktok-seller-return-refund#chunk_3 (Score: 0.1715)
+  - Top-1 Section: # Khiếu nại
+  - Top-1 Content: # Khiếu nại
+
+Người bán có thể khiếu nại yêu cầu chỉ hoàn tiền trong vòng 15 ngày kể từ khi hoàn tiền được xử lý; với hàng gửi tại bưu cục hoặc lấy tại...
+  - Agent Answer: [Agent Response]: Người bán có thể khiếu nại yêu cầu chỉ hoàn tiền trong vòng 15 ngày kể từ khi hoàn tiền được xử lý; với hàng gửi tại bưu cục hoặc lấy tại nhà, hạn khiếu nại là 7 ngày kể từ khi nhận hàng trả về.
+
+[Query #3] Có những phương thức trả lại gói hàng nào cho người mua trên TikTok Shop?
+  - Gold Answer: Có 3 phương thức: Gửi trả tại bưu cục, Lấy hàng tại nhà, và Tự gửi hàng.
+  - Metadata filter: None
+  - Đánh giá: CHÍNH XÁC (MATCH)
+  - Top-1 ID: tiktok-return-methods#chunk_0 (Score: 0.1608)
+  - Top-1 Section: # Phương thức trả hàng
+  - Top-1 Content: # Phương thức trả hàng
+
+TikTok Shop có 3 phương thức trả hàng cho người mua: Gửi trả tại bưu cục (J&T, GHN, ViettelPost) trong vòng 10 ngày lịch; Lấy ...
+  - Agent Answer: [Agent Response]: TikTok Shop có 3 phương thức trả hàng cho người mua: Gửi trả tại bưu cục (J&T, GHN, ViettelPost) trong vòng 10 ngày lịch; Lấy hàng tại nhà (J&T, GHN, ViettelPost) với 10 ngày chọn lịch và tối đa 3 lần lấy; và Tự gửi hàng (người mua tự tải mã vận đơn trong 10 ngày lịch).
+
+[Query #4] Nếu người bán không chấp nhận nhận lại kiện hàng hoàn trả sau 3 lần giao thì xử lý ra sao?
+  - Gold Answer: Đơn vị vận chuyển sẽ ngừng liên lạc với người bán và gói hàng sẽ bị tiêu hủy sau 7 ngày kể từ lần giao đầu tiên.
+  - Metadata filter: None
+  - Đánh giá: CHÍNH XÁC (MATCH)
+  - Top-1 ID: tiktok-return-methods#chunk_0 (Score: 0.1295)
+  - Top-1 Section: # Phương thức trả hàng
+  - Top-1 Content: # Phương thức trả hàng
+
+TikTok Shop có 3 phương thức trả hàng cho người mua: Gửi trả tại bưu cục (J&T, GHN, ViettelPost) trong vòng 10 ngày lịch; Lấy ...
+  - Agent Answer: [Agent Response]: TikTok Shop có 3 phương thức trả hàng cho người mua: Gửi trả tại bưu cục (J&T, GHN, ViettelPost) trong vòng 10 ngày lịch; Lấy hàng tại nhà (J&T, GHN, ViettelPost) với 10 ngày chọn lịch và tối đa 3 lần lấy; và Tự gửi hàng (người mua tự tải mã vận đơn trong 10 ngày lịch).
+
+[Query #5] Sau khi nhận sản phẩm hoàn trả tại bưu cục hoặc tại nhà, người bán có mấy ngày để kiểm tra và từ chối?
+  - Gold Answer: Người bán có 2 ngày dương lịch sau khi nhận sản phẩm để từ chối nếu không đạt yêu cầu; quá hạn sẽ tự động được chấp thuận.
+  - Metadata filter: {'audience': 'seller'}
+  - Đánh giá: CHÍNH XÁC (MATCH)
+  - Top-1 ID: tiktok-seller-return-refund#chunk_1 (Score: 0.1274)
+  - Top-1 Section: # Thời hạn gửi hàng trả
+  - Top-1 Content: # Thời hạn gửi hàng trả
+
+Với lấy hàng tại nhà, ngày lấy hàng phải được chọn trong vòng 3 ngày dương lịch. Với gửi tại bưu cục, đơn hàng phải được gửi ...
+  - Agent Answer: [Agent Response]: Yêu cầu cần được người bán xử lý trong vòng 1 ngày làm việc kể từ khi người mua gửi. Nếu không có hành động, yêu cầu hoàn tiền sẽ được phê duyệt tự động.
+
+======================================================================
+KẾT QUẢ TỔNG KẾT: 5/5 queries khớp chính xác Top-1 tài liệu mục tiêu
+======================================================================
